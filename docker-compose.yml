@@ -1,0 +1,40 @@
+version: "3"
+services:
+  nginx:
+    image: nginx:latest
+    container_name: eticket_nginx
+    volumes:
+      - ./php/:/scripts/
+    working_dir: /etc/nginx/
+    depends_on:
+      - php
+  php:
+    build:
+      context: ./php/
+      dockerfile: DOCKERFILE
+    image: php:7.4.3-fpm
+    container_name: eticket_php
+    volumes:
+      - ./app:/app
+      - ./php/:/scripts/
+    working_dir: /app
+    ports:
+      - 80:8000
+    command: /scripts/entrypoint.sh
+    depends_on:
+      - db
+  db:
+    image: postgres:10-alpine
+    container_name: eticket_db
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=eticket
+    volumes:
+      - ./pgsql/init:/docker-entrypoint-initdb.d
+      - dbdata:/var/lib/postgresql/data
+volumes:
+  dbdata:
